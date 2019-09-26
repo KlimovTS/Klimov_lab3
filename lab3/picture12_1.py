@@ -32,20 +32,20 @@ def animal(k, r, x0, y0):
     brushColor(255,255,255)
     ellyps(x0+98*k*r, y0-140*k, x0+108*k*r, y0-136*k)
     penSize(6*k)
-    line(x0+90*k*r, y0-130*k, x0+70*k*r, y0-150*k)
-    line(x0+95*k*r, y0-135*k, x0+75*k*r, y0-160*k)
+    line(x0+90*k*r, y0-130*k, x0+70*k*r, y0-153*k)
+    line(x0+95*k*r, y0-135*k, x0+78*k*r, y0-158*k)
     penSize(1)
     penColor(255,255,255)
     brushColor(255,255,255)
     animalLeg(k, r, x0+80*k*r, y0+20*k)
-    animalLeg(k, r, x0+40*k*r, y0-10*k)
+    animalLeg(k, r, x0+50*k*r, y0-10*k)
     animalLeg(k, r, x0-40*k*r, y0+20*k)
     animalLeg(k, r, x0-80*k*r, y0-10*k)
 
 
 
 def flower(k, r, x0, y0):
-    penColor(0,0,0)
+    penColor(150,150,150)
     brushColor(255,255,255)
     tmpx=-1
     tmpy=-7
@@ -61,7 +61,7 @@ def flower(k, r, x0, y0):
     tmpx=0
     tmpy=0
     ellyps(x0+(10+tmpx)*k*r, y0+(5+tmpy)*k, x0-(10-tmpx)*k*r, y0-(5-tmpy)*k)
-    penColor(0,0,0)
+    penColor(150,150,150)
     brushColor(255,255,255)
     tmpx=13
     tmpy=0
@@ -110,7 +110,11 @@ def mountains():
 
 
 mountains()
-animal(1, 1, 200, 200)
-kustik(1, 1, 200, 460)
+animal(0.55, 1, 94, 363)
+kustik(1.05, 1, 335, 460)
+
+
+
+
 
 run()
