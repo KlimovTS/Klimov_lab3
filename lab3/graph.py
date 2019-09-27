@@ -79,8 +79,8 @@ elif platform == "linux":
         VK_RETURN = 0x24 # RETURN key
         VK_ESCAPE = 0x09 # ESC key
 
-DEF_GRAPH_WIDTH = 1000
-DEF_GRAPH_HEIGHT = 1200
+DEF_GRAPH_WIDTH = 2000
+DEF_GRAPH_HEIGHT = 2400
 
 import tkinter
 from random import randint
