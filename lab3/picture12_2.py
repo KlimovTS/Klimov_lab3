@@ -1,7 +1,7 @@
 from graph import *
 
 
-K=1.5
+K=1.45
 
 xSize=400
 ySize=565
