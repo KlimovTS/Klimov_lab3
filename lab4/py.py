@@ -1,121 +1,553 @@
 from tkinter import *
-from random import randrange as rnd, choice
+import random
 import time
+import math
+
+# создание окон
 root = Tk()
-root.geometry('800x600')
 width = 800
 heigth = 600
+heigth2 = 153
+WH =  str(width)+'x'+str(heigth+heigth2)
+root.geometry(WH)
 
-canv = Canvas(root,bg='white')
-canv.pack(fill=BOTH,expand=1)
+canv = Canvas(root, width=width, height=heigth, bg='white')
+canv.pack()
+c = Canvas(root, width=width, height=20, bg='lightgrey')
+c.pack()
+d = Canvas(root, width=width, height=170, bg='white')
+d.pack()
 
-colors = ['red','orange','yellow','green','blue']
+# Хранилище моих кнопок
+#Buttons = []
+# [номер функции, x0, y0, dx, dy, text, backcolor]
 
-i=0
-n=0
+def Freset():
+    global lock1, lock2, lock3, lock4, pause, startbool, playername, leaderboard, rules, prevpause
+    if not (lock1 or lock2 or lock3 or lock4) and playername!='' and leaderboard==0 and rules==0:
+        if startbool:
+            pause = 0
+            Bpause.configure(text = "pause")
+            reset.configure(text = "reset")
+        startbool=0
+        start()
+        lock1 = 1
+        lock2 = 1
+        lock3 = 1
+        lock4 = 1
+        BLock1.configure(text = "locked")
+        BLock2.configure(text = "locked")
+        BLock3.configure(text = "locked")
+        BLock4.configure(text = "locked")
+        canv.delete(ALL)
+        if len(Objects)==0:
+            if startbool==0:
+                canv.delete(ALL)
+                canv.create_text(width/2, heigth/2, text="Game over!", justify=CENTER, font="Verdana 70")
+        else:
+            canv.delete(ALL)
+            for j in Objects:
+                if j[0]==0:
+                    circle0t(j[1])
+                if j[0]==1:
+                    square0t(j[1])
+reset = Button(d, text="start", command=Freset, font="Verdana 25")
+reset.grid(column=4, row=5)
+def Fpause():
+    global pause, active
+    if active==1:
+        pause = 1-pause
+        if pause:
+            Bpause.configure(text = "unpause")
+        else:
+            Bpause.configure(text = "pause")
+Bpause = Button(d, text="pause", command=Fpause, font="Verdana 25")
+Bpause.grid(column=5, row=5)
+def Fleaderboard():
+    global leaderboard, pause, prevpause, rules
+    leaderboard = 1-leaderboard
+    if leaderboard:
+        prevpause = pause
+        pause=0
+        Fpause()
+        rules=1
+        Frules()
+        Bleaderboard.configure(text = "close leaderboard")
+    else:
+        pause = 1-prevpause
+        Fpause()
+        if rules==0:
+            canv.delete(ALL)
+            if len(Objects)==0:
+                if startbool==0:
+                    canv.delete(ALL)
+                    canv.create_text(width/2, heigth/2, text="Game over!", justify=CENTER, font="Verdana 70")
+            else:
+                canv.delete(ALL)
+                for j in Objects:
+                    if j[0]==0:
+                        circle0t(j[1])
+                    if j[0]==1:
+                        square0t(j[1])
+        Bleaderboard.configure(text = "open leaderboard")
+Bleaderboard = Button(d, text="open leaderboard", command=Fleaderboard, font="Verdana 25")
+Bleaderboard.grid(column=6, row=5)
+def Frules():
+    global  leaderboard, pause, prevpause, rules
+    rules = 1-rules
+    if rules:
+        prevpause = pause
+        pause=0
+        Fpause()
+        leaderboard=1
+        Fleaderboard()
+    else:
+        pause = 1-prevpause
+        Fpause()
+        if leaderboard==0:
+            canv.delete(ALL)
+            if len(Objects)==0:
+                if startbool==0:
+                    canv.delete(ALL)
+                    canv.create_text(width/2, heigth/2, text="Game over!", justify=CENTER, font="Verdana 70")
+            else:
+                canv.delete(ALL)
+                for j in Objects:
+                    if j[0]==0:
+                        circle0t(j[1])
+                    if j[0]==1:
+                        square0t(j[1])
+Brules = Button(d, text="?!", command=Frules, font="Verdana 25")
+Brules.grid(column=7, row=5)
+def Flock1():
+    global lock1
+    lock1 = 1-lock1
+    if lock1:
+        BLock1.configure(text = "locked")
+    else:
+        BLock1.configure(text = "unlocked")
+BLock1 = Button(d, text="locked", command=Flock1)
+BLock1.grid(column=0, row=0)
+def Flock2():
+    global lock2
+    lock2 = 1-lock2
+    if lock2:
+        BLock2.configure(text = "locked")
+    else:
+        BLock2.configure(text = "unlocked")
+BLock2 = Button(d, text="locked", command=Flock2)
+BLock2.grid(column=0, row=10)
+def Flock3():
+    global lock3
+    lock3 = 1-lock3
+    if lock3:
+        BLock3.configure(text = "locked")
+    else:
+        BLock3.configure(text = "unlocked")
+BLock3 = Button(d, text="locked", command=Flock3)
+BLock3.grid(column=10, row=0)
+def Flock4():
+    global lock4
+    lock4 = 1-lock4
+    if lock4:
+        BLock4.configure(text = "locked")
+    else:
+        BLock4.configure(text = "unlocked")
+BLock4 = Button(d, text="locked", command=Flock4)
+BLock4.grid(column=10, row=10)
+def Fsetname():
+    global playername
+    a = e.get()
+    e.delete(first=0, last=END)
+    if a!='':
+        playername = a
+    d.delete(ALL)
+    txt='Player name: '+playername
+    d.create_text(360, 110, text=txt, justify=CENTER, font="Verdana 14", anchor=W)
+Bsetname = Button(d, text="SET NAME   ------>", command=Fsetname)
+Bsetname.grid(column=4, row=10)
+
+
+e = Entry(d, width=29)
+e.grid(column=5, row=10)
+
+
+playername=''
+startbool=1
+lock1=1
+lock2=1
+lock3=1
+lock4=1
+Score=0
+pause=0
+prevpause=0
+leaderboard=0
+rules=0
+active=1
 I="0"
+dI = 0
+Difficulty="1"
 #[Тип, [параметры]]
 #0 - круг
 #1 - квадрат
 Objects=[]
+frameTime=0
+frameTime0=16
+time1x=6000
+counter=0
+timeMultiplier=2
+LeaderBoardText = []
+clickStreak = 0
+MouseRadius = 0
+for i  in range(0, 10, 1):
+    LeaderBoardText.append(['0\n', 0])
+
+# расставляет параметры для начала игры
+def start():
+    global Score, I, dI, Objects, frameTime, time1x, counter, timeMultiplier, Difficulty, active, clickStreak, MouseRadius
+    active = 1
+    MouseRadius=50
+    clickStreak=0
+    Score=0
+    I="0"
+    dI = 0
+    Objects=[]
+    frameTime=frameTime0
+    time1x=6000
+    counter=0
+    timeMultiplier=2
+    Difficulty='difficulty='+mstr(2/timeMultiplier)+'   radius bonus='+str(clickStreak)
+    #круги
+    for j in range(0, 5, 1):
+        Objects.append(randCircle())
+    #квадраты    
+    for j in range(0, 5, 1):
+        Objects.append(randSquare())
+        
+# расставляет параметры для запуска игры
+def start0():
+    global Score, I, dI, Objects, frameTime, time1x, counter, timeMultiplier, Difficulty, active, startbool, MouseRadius
+    startbool=1
+    clickStreak=0
+    MouseRadius=50
+    loadLeaderBoardText()
+    Fsetname()
+    Score=0
+    I="0"
+    dI = 0
+    Objects=[]
+    frameTime=frameTime0
+    time1x=6000
+    counter=0
+    timeMultiplier=2
+    Difficulty='difficulty='+mstr(2/timeMultiplier)+'   radius bonus='+str(clickStreak)
+    Fpause()
+    lock1=1
+    lock2=1
+    lock3=1
+    lock4=1
+    Flock1()
+    Flock2()
+    Flock3()
+    Flock4()
+    active = 0
+
+def saveresult():
+    global LeaderBoardText
+    f1 = open('leaderboardNames.txt', 'w')
+    f2 = open('leaderboardScores.txt', 'w')
+    for i in LeaderBoardText:
+        f1.write(i[0])
+        f2.write(str(i[1])+'\n')
+
+def loadLeaderBoardText():
+    global LeaderBoardText
+    try:
+        f1 = open('leaderboardNames.txt', 'r')
+    except FileNotFoundError:
+        f1 = open('leaderboardNames.txt', 'w')
+    try:
+        f2 = open('leaderboardScores.txt', 'r')
+    except FileNotFoundError:
+        f2 = open('leaderboardScores.txt', 'w')
+    f1 = open('leaderboardNames.txt', 'r')
+    f2 = open('leaderboardScores.txt', 'r')
+    a1 = []
+    a2 = []
+    for i  in f1:
+        a1.append(i)
+    for i  in f2:
+        a2.append(i)
+    for i in range(0, len(a1), 1):
+        LeaderBoardText.append([a1[i], float(a2[i])])
+    LeaderBoardText.sort(key=mySort, reverse=True)
+    A = []
+    for i in range(0, 10, 1):
+        A.append(LeaderBoardText[i])
+    LeaderBoardText = A
+
+def randSign():
+    a = random.randint(0, 1)
+    a = a*2
+    a = a-1
+    return a
+
+def randColor():
+    r = 255
+    g = 255
+    b = 255
+    while r+g+b>675:
+        r = random.randint(0, 255)
+        g = random.randint(0, 255)
+        b = random.randint(0, 255)
+    col = "#%02X%02X%02X" % (r, g, b)
+    return col
+
+def mstr(a):
+    a=a*100
+    b=int(a)
+    if (a-b)>=0.5:
+        b=b+1
+    b=b/100
+    return str(b)
 
 def randCircle():
-    x = rnd(100,700)
-    y = rnd(100,500)
-    r = rnd(30,50)
-    color = choice(colors)
-    vx = randint(1, 8)
-    vy = randint(1, 8)
-    return [0, [x, y, r, color, vx, vy]]
+    global time1x, timeMultiplier
+    x = random.randint(100,700)
+    y = random.randint(100,500)
+    r = random.randint(10,40)
+    color = randColor()
+    vx = randSign()*random.randint(1, 8)
+    vy = randSign()*random.randint(1, 8)
+    lifeTime = 4000*timeMultiplier
+    k=time1x/lifeTime
+    return [0, [x, y, r, color, vx, vy, lifeTime, k]]
 
 def randSquare():
-    x = rnd(100,700)
-    y = rnd(100,500)
-    r = rnd(30,50)
-    color = choice(colors)
-    vx = randint(9, 16)
-    vy = randint(9, 16)
-    return [1, [x, y, r, color, vx, vy]]
-
-#круги
-for j in range(0, 3, 1):
-    Objects.append(randCircle())
-#квадраты    
-for j in range(0, 2, 1):
-    Objects.append(randSquare())
-
+    global time1x, timeMultiplier
+    x = random.randint(100,700)
+    y = random.randint(100,500)
+    r = random.randint(10,40)
+    color = randColor()
+    vx = randSign()*random.randint(9, 16)
+    vy = randSign()*random.randint(9, 16)
+    lifeTime = 9000*timeMultiplier
+    k=time1x/lifeTime
+    return [1, [x, y, r, color, vx, vy, lifeTime, k]]
 
 def circle(a):
+    global width, heigth
+    vx = a[4]
+    vy = a[5]
+    a[0]=a[0]+vx
+    a[1]=a[1]+vy
+    x = a[0]
+    y = a[1]
+    r = a[2]
+    c = a[3]
+    canv.create_oval(x-r,y-r,x+r,y+r,fill = c , width=0)
+    if x+r>width:
+        a[4]=-random.randint(1, 64)/8
+    if x-r<0:
+        a[4]=random.randint(1, 64)/8
+    if y+r>heigth:
+        a[5]=-random.randint(1, 64)/8
+    if y-r<0:
+        a[5]=random.randint(1, 64)/8
+
+def circle0t(a):
     global width, heigth
     x = a[0]
     y = a[1]
     r = a[2]
     c = a[3]
-    vx = a[4]
-    vy = a[5]
     canv.create_oval(x-r,y-r,x+r,y+r,fill = c , width=0)
-    if x+r>width:
-        a[4]=-randint(1, 8)
-    if x-r<0:
-        a[4]=randint(1, 8)
-    if y+r>heigth:
-        a[5]=-randint(1, 8)
-    if y-r<0:
-        a[5]=randint(1, 8)
-    a[0]=x+vx
-    a[1]=y+vy
+    
 
 def square(a):
     global width, heigth
+    vx = a[4]
+    vy = a[5]
+    a[0]=a[0]+vx
+    a[1]=a[1]+vy
     x = a[0]
     y = a[1]
     r = a[2]
     c = a[3]
     canv.create_rectangle(x+r, y+r, x-r, y-r, fill=c, width=0)
     if x+r>width:
-        a[4]=-randint(9, 16)
+        a[4]=-random.randint(1, 128)/8
     if x-r<0:
-        a[4]=randint(9, 16)
+        a[4]=random.randint(1, 128)/8
     if y+r>heigth:
-        a[5]=-randint(9, 16)
+        a[5]=-random.randint(1, 128)/8
     if y-r<0:
-        a[5]=randint(9, 16)
-    vx = a[4]
-    vy = a[5]
-    a[0]=x+vx
-    a[1]=y+vy
+        a[5]=random.randint(1, 128)/8
+
+def square0t(a):
+    global width, heigth
+    x = a[0]
+    y = a[1]
+    r = a[2]
+    c = a[3]
+    canv.create_rectangle(x+r, y+r, x-r, y-r, fill=c, width=0)
+
+def mySort(a):
+    return a[1]
 
 def draw():
-    global I, Objects
-    canv.delete(ALL)
-    canv.create_text(10, 10, text=I, justify=CENTER, font="Verdana 14", anchor=NW)
-    for j in Objects:
-        if j[0]==0:
-            circle(j[1])
-        if j[0]==1:
-            square(j[1])
-    root.after(16,draw)
+    global I, Objects, frameTime, width, heigth, pause, lock1, lock2, lock3,  lock4, active, leaderboard, LeaderBoardText, playername, Score, rules
+    if rules:
+        canv.delete(ALL)
+        rule  = 'This is game rules'
+        canv.create_text(400, 300, text=rule, justify=CENTER, font="Verdana 30")
+    elif leaderboard:
+        canv.delete(ALL)
+        for i in range(0, 10, 1):
+            txt = str(i+1) + '     ' + LeaderBoardText[i][0][:-1] + ' = ' + mstr(LeaderBoardText[i][1]) + ' Points'
+            canv.create_text(30, 30+60*i, text=txt, justify=CENTER, font="Verdana 30", anchor=W)
+    else:
+        if pause==0:
+            if len(Objects)==0:
+                if active:
+                    canv.delete(ALL)
+                    canv.create_text(width/2, heigth/2, text="Game over!", justify=CENTER, font="Verdana 70")
+                    lock1=1
+                    lock2=1
+                    lock3=1
+                    lock4=1
+                    Flock1()
+                    Flock2()
+                    Flock3()
+                    Flock4()
+                    LeaderBoardText.append([playername+'\n', Score])
+                    LeaderBoardText.sort(key=mySort, reverse=True)
+                    A = []
+                    for i in range(0, 10, 1):
+                        A.append(LeaderBoardText[i])
+                    LeaderBoardText = A
+                    saveresult()
+                    active = 0
+            else:
+                canv.delete(ALL)
+                c.delete(ALL)
+                c.create_text(30, 10, text=I, justify=CENTER, font="Verdana 14", anchor=W)
+                c.create_text(770, 10, text=Difficulty, justify=CENTER, font="Verdana 14", anchor=E)
+                for j in Objects:
+                    if j[0]==0:
+                        circle(j[1])
+                    if j[0]==1:
+                        square(j[1])
+                for j in Objects:
+                    if j[1][6]<0:
+                        Objects.remove(j)
+                    else:
+                        j[1][6]=j[1][6]-frameTime
+    
+    
+    
+    root.after(frameTime, draw)
 
 
 def click(event):
-    global i, n, I, Objects
-    print(i, n)
-    for j in Objects:
-        if j[0]==0:
-            if (event.x-j[1][0])*(event.x-j[1][0])+(event.y-j[1][1])*(event.y-j[1][1])<(j[1][2]*j[1][2]):
-                Objects.remove(j)
-                i+=1
-                Objects.append(randCircle())
-        if j[0]==1:
-            if (((event.x>j[1][0]-j[1][2]) and (event.x<j[1][0]+j[1][2])) and ((event.y>j[1][1]-j[1][2]) and (event.y<j[1][1]+j[1][2]))):
-                Objects.remove(j)
-                i+=2
-                Objects.append(randSquare())
-    I=str(i)
-    n+=1
-    
+    global Score, I, Objects, dI, counter, timeMultiplier,  Difficulty, pause, clickStreak, rules, leaderboard, MouseRadius, active
+    if pause==0 and active==1:
+        obj = []
+        s = []
+        d = []
+        combo = 0
+        tmpR=50-MouseRadius
+        for j in Objects:
+            tmp = 1
+            if j[0]==0:
+                if (event.x-j[1][0])*(event.x-j[1][0])+(event.y-j[1][1])*(event.y-j[1][1])<((j[1][2]+tmpR)*(j[1][2]+tmpR)):
+                    counter+=1
+                    k1=(16+j[1][4]*j[1][4]+j[1][5]*j[1][5])/16
+                    k2=20*20/j[1][2]/j[1][2]
+                    s.append(math.pi/4*k1*k2*j[1][7])
+                    tmp2=random.randint(0,5)
+                    if tmp2==0:
+                        obj.append(randCircle())
+                        obj.append(randCircle())
+                    if tmp2==1:
+                        obj.append(randCircle())
+                        obj.append(randCircle())
+                    if tmp2==2:
+                        obj.append(randCircle())
+                        obj.append(randCircle())
+                    if tmp2==3:
+                        obj.append(randCircle())
+                        obj.append(randSquare())
+                    if tmp2==4:
+                        obj.append(randCircle())
+                        obj.append(randSquare())
+                    if tmp2==5:
+                        obj.append(randSquare())
+                        obj.append(randSquare())
+                    tmp = 0
+            if j[0]==1:
+                if (((event.x>j[1][0]-j[1][2]-tmpR) and (event.x<j[1][0]+j[1][2]+tmpR)) and ((event.y>j[1][1]-j[1][2]-tmpR) and (event.y<j[1][1]+j[1][2]+tmpR))):
+                    counter+=1
+                    k1=(16+j[1][4]*j[1][4]+j[1][5]*j[1][5])/16
+                    k2=20*20/j[1][2]/j[1][2]
+                    s.append(1*k1*k2*j[1][7])
+                    tmp2=random.randint(0,5)
+                    if tmp2==0:
+                        obj.append(randSquare())
+                        obj.append(randSquare())
+                    if tmp2==1:
+                        obj.append(randSquare())
+                        obj.append(randSquare())
+                    if tmp2==2:
+                        obj.append(randSquare())
+                        obj.append(randSquare())
+                    if tmp2==3:
+                        obj.append(randSquare())
+                        obj.append(randCircle())
+                    if tmp2==4:
+                        obj.append(randSquare())
+                        obj.append(randCircle())
+                    if tmp2==5:
+                        obj.append(randCircle())
+                        obj.append(randCircle())
+                    tmp = 0
+            if tmp:
+                obj.append(j)
+            else:
+                timeMultiplier = timeMultiplier*0.9931
+        Objects=obj
+        ss = 0
+        for i in s:
+            ss+=i
+        dI = ss*len(s)
+        combo = len(s)
+        if rules==0 and leaderboard==0:
+            if len(s)==0:
+                clickStreak=clickStreak-4
+                if clickStreak<0:
+                    clickStreak=0
+                tmpR=50-MouseRadius
+                MouseRadius=MouseRadius/(0.99**4)
+                if MouseRadius>50:
+                    MouseRadius=50
+                canv.create_oval(event.x+tmpR, event.y+tmpR, event.x-tmpR, event.y-tmpR, fill = "red" , width=0)
+            else:
+                clickStreak+=len(s)*combo
+                tmpR=50-MouseRadius
+                MouseRadius=MouseRadius*(0.99**(len(s)*combo))
+                canv.create_oval(event.x+tmpR, event.y+tmpR, event.x-tmpR, event.y-tmpR, fill = "black" , width=0)
+        Score+=dI
+        Difficulty='difficulty='+mstr(2/timeMultiplier)+'   radius bonus='+str(clickStreak)
+        if combo>0:
+            if combo>1:
+                I=mstr(Score)+' +'+mstr(dI)+'   '+str(combo)+'x combo'
+            else:
+                I=mstr(Score)+' +'+mstr(dI)
+        else:
+            I = I
 
 
+start0()
 draw()
 canv.bind('<Button-1>', click)
 mainloop()
