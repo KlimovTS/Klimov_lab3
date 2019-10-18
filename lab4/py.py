@@ -506,6 +506,7 @@ def click(event):
         d = []
         combo = 0
         tmpR=50-MouseRadius
+        tmpR=tmpR/(2/timeMultiplier)**0.5
         for j in Objects:
             tmp = 1
             if j[0]==0:  # обработка объекта если это круг
@@ -576,6 +577,7 @@ def click(event):
                 if clickStreak<0:
                     clickStreak=0
                 tmpR=50-MouseRadius
+                tmpR=tmpR/(2/timeMultiplier)**0.5
                 MouseRadius=MouseRadius/(0.99**4)
                 if MouseRadius>50:
                     MouseRadius=50
@@ -583,6 +585,7 @@ def click(event):
             else:
                 clickStreak+=len(s)*combo
                 tmpR=50-MouseRadius
+                tmpR=tmpR/(2/timeMultiplier)**0.5
                 MouseRadius=MouseRadius*(0.99**(len(s)*combo))
                 canv.create_oval(event.x+tmpR, event.y+tmpR, event.x-tmpR, event.y-tmpR, fill = "black" , width=0)
         Score+=dI
