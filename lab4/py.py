@@ -656,11 +656,11 @@ def click(event):
                         obj.append(randCircleCircle())
                     tmp = 0
             if j[0]==2: # обработка объекта если это бублик
-                if (event.x-j[1][0])*(event.x-j[1][0])+(event.y-j[1][1])*(event.y-j[1][1])<((j[1][2]+tmpR)*(j[1][2]+tmpR)) and (event.x-j[1][0])*(event.x-j[1][0])+(event.y-j[1][1])*(event.y-j[1][1])>((j[1][8]-tmpR)*(j[1][8]-tmpR)):
+                if (event.x-j[1][0])*(event.x-j[1][0])+(event.y-j[1][1])*(event.y-j[1][1])<((j[1][2]+tmpR)*(j[1][2]+tmpR)) and ((event.x-j[1][0])*(event.x-j[1][0])+(event.y-j[1][1])*(event.y-j[1][1]))**0.5>(j[1][8]-tmpR):
                     counter+=1
                     k1=(16+j[1][4]*j[1][4]+j[1][5]*j[1][5])/16
                     k2=20*20/(j[1][2]*j[1][2]-j[1][8]*j[1][8])
-                    s.append(math.pi/4*k1*k2*j[1][7]*1.5)
+                    s.append(math.pi/4*k1*k2*j[1][7]*2)
                     tmp2=random.randint(0,11)
                     if tmp2>=6:
                         obj.append(randCircleCircle())

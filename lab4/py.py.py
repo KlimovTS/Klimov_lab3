@@ -21,27 +21,22 @@ c.pack()
 d = Canvas(root, width=width, height=170, bg='white')
 d.pack()
 
-# КНОПКИ:
 
-# функция кнопки():
-#      что - то
-# кнопка
 
-class Circle():
+class Circle:
     
     def __init__(self):
         global time1x, timeMultiplier
         self.x = random.randint(100,700)
         self.y = random.randint(100,500)
         self.r = random.randint(10,40)
-        self.color = randColor()
+        self.c = randColor()
         self.vx = randSign()*random.randint(1, 8)
         self.vy = randSign()*random.randint(1, 8)
         self.lifeTime = 4000*timeMultiplier
-        self.k=time1x/lifeTime
+        self.k=time1x/self.lifeTime
     
     def draw(self):
-        global width, heigth
         canv.create_oval(self.x-self.r,self.y-self.r,self.x+self.r,self.y+self.r,fill = self.c , width=0)
     
     def drawAndMove(self):
@@ -67,25 +62,190 @@ class Circle():
             s.append(math.pi/4*k1*k2*self.k)
             tmp2=random.randint(0,11)
             if tmp2>=6:
-                obj.append(randCircle())
-                obj.append(randCircle())
+                obj.append(Circle())
+                obj.append(Circle())
             if tmp2==4 or tmp2==5:
-                obj.append(randCircle())
-                obj.append(randSquare())
+                obj.append(Circle())
+                obj.append(Square())
             if tmp2==2 or tmp2==3:
-                obj.append(randCircle())
-                obj.append(randCircleCircle())
+                obj.append(Circle())
+                obj.append(CircleCircle())
             if tmp2==1:
-                obj.append(randSquare())
-                obj.append(randSquare())
+                obj.append(Square())
+                obj.append(Square())
             if tmp2==0:
-                obj.append(randCircleCircle())
-                obj.append(randCircleCircle())
+                obj.append(CircleCircle())
+                obj.append(CircleCircle())
             return [0, obj, s]
         else:
             return [1]
     
+    def checkLifeTime(self, dt):
+        self.lifeTime -= dt
+        if self.lifeTime<0:
+            return 0
+        else:
+            return 1
 
+class Square:
+    
+    def __init__(self):
+        global time1x, timeMultiplier
+        self.x = random.randint(100,700)
+        self.y = random.randint(100,500)
+        self.r = random.randint(10,40)
+        self.c = randColor()
+        self.vx = randSign()*random.randint(9, 16)
+        self.vy = randSign()*random.randint(9, 16)
+        self.lifeTime = 9000*timeMultiplier
+        self.k=time1x/self.lifeTime
+    
+    def draw(self):
+        canv.create_rectangle(self.x+self.r, self.y+self.r, self.x-self.r, self.y-self.r, fill=self.c, width=0)
+    
+    def drawAndMove(self):
+        global width, heigth
+        self.x += self.vx
+        self.y += self.vy
+        canv.create_rectangle(self.x+self.r, self.y+self.r, self.x-self.r, self.y-self.r, fill=self.c, width=0)
+        if self.x+self.r>width:
+            self.vx=-random.randint(1, 128)/8
+        if self.x-self.r<0:
+            self.vx=random.randint(1, 128)/8
+        if self.y+self.r>heigth:
+            self.vy=-random.randint(1, 128)/8
+        if self.y-self.r<0:
+            self.vy=random.randint(1, 128)/8
+    
+    def checkHit(self, x, y, r, obj, s):
+        global counter
+        if (((x>self.x-self.r-r) and (x<self.x+self.r+r)) and ((y>self.y-self.r-r) and (y<self.y+self.r+r))):
+            counter+=1
+            k1=(16+self.vx*self.vx+self.vy*self.vy)/16
+            k2=20*20/self.r/self.r
+            s.append(1*k1*k2*self.k)
+            tmp2=random.randint(0,11)
+            if tmp2>=6:
+                obj.append(Square())
+                obj.append(Square())
+            if tmp2==4 or tmp2==5:
+                obj.append(Circle())
+                obj.append(Square())
+            if tmp2==2 or tmp2==3:
+                obj.append(Square())
+                obj.append(CircleCircle())
+            if tmp2==1:
+                obj.append(Circle())
+                obj.append(Circle())
+            if tmp2==0:
+                obj.append(CircleCircle())
+                obj.append(CircleCircle())
+            return [0, obj, s]
+        else:
+            return [1]
+    
+    def checkLifeTime(self, dt):
+        self.lifeTime -= dt
+        if self.lifeTime<0:
+            return 0
+        else:
+            return 1
+
+class CircleCircle:
+    
+    def __init__(self):
+        global time1x, timeMultiplier
+        self.x = random.randint(100,700)
+        self.y = random.randint(100,500)
+        self.R = random.randint(20,60)
+        self.r = random.randint(10,self.R-10)
+        self.c = randColor()
+        self.vx = randSign()*random.randint(1, 8)
+        self.vy = randSign()*random.randint(1, 8)
+        self.ax = randSign()*random.randint(1, 8)/8
+        self.ay = randSign()*random.randint(1, 8)/8
+        self.lifeTime = 6000*timeMultiplier
+        self.k=time1x/self.lifeTime
+        self.Points = []
+        n = 90
+        for i in range(0, n+2, 1):
+            tmpx = self.R*math.cos(2*math.pi/n*i)
+            tmpy = self.R*math.sin(2*math.pi/n*i)
+            self.Points.append((tmpx, tmpy))
+        for i in range(0, n+2, 1):
+            tmpx = self.r*math.cos(2*math.pi/n*(n+1-i))
+            tmpy = self.r*math.sin(2*math.pi/n*(n+1-i))
+            self.Points.append((tmpx, tmpy))
+    
+    def draw(self):
+        P = movePoly(self.Points, self.x, self.y)
+        canv.create_polygon(P, fill=self.c, width=0)
+    
+    def drawAndMove(self):
+        global width, heigth
+        self.vx += self.ax
+        self.vy += self.ay
+        self.x += self.vx
+        self.y += self.vy
+        P = movePoly(self.Points, self.x, self.y)
+        canv.create_polygon(P, fill=self.c, width=0)
+        if self.x+self.R>width:
+            self.vx=-random.randint(1, 8)
+            self.ax=randSign()*random.randint(1, 8)/32
+            self.ay=randSign()*random.randint(1, 8)/32
+        if self.x-self.R<0:
+            self.vx=random.randint(1, 8)
+            self.ax=randSign()*random.randint(1, 8)/32
+            self.ay=randSign()*random.randint(1, 8)/32
+        if self.y+self.R>heigth:
+            self.vy=-random.randint(1, 8)
+            self.ax=randSign()*random.randint(1, 8)/32
+            self.ay=randSign()*random.randint(1, 8)/32
+        if self.y-self.R<0:
+            self.vy=random.randint(1, 8)
+            self.ax=randSign()*random.randint(1, 8)/32
+            self.ay=randSign()*random.randint(1, 8)/32
+    
+    def checkHit(self, x, y, r, obj, s):
+        global counter
+        if (x-self.x)*(x-self.x)+(y-self.y)*(y-self.y)<((self.R+r)*(self.R+r)) and ((x-self.x)*(x-self.x)+(y-self.y)*(y-self.y))**0.5>(self.r-r):
+            counter+=1
+            k1=(16+self.vx*self.vx+self.vy*self.vy)/16
+            k2=20*20/(self.R*self.R-self.r*self.r)
+            s.append(math.pi/4*k1*k2*self.k*2)
+            tmp2=random.randint(0,11)
+            if tmp2>=6:
+                obj.append(CircleCircle())
+                obj.append(CircleCircle())
+            if tmp2==4 or tmp2==5:
+                obj.append(CircleCircle())
+                obj.append(Square())
+            if tmp2==2 or tmp2==3:
+                obj.append(Circle())
+                obj.append(CircleCircle())
+            if tmp2==1:
+                obj.append(Square())
+                obj.append(Square())
+            if tmp2==0:
+                obj.append(Circle())
+                obj.append(Circle())
+            return [0, obj, s]
+        else:
+            return [1]
+    
+    def checkLifeTime(self, dt):
+        self.lifeTime -= dt
+        if self.lifeTime<0:
+            return 0
+        else:
+            return 1
+    
+# КНОПКИ:
+
+# функция кнопки():
+#      что - то
+# кнопка
+            
 # перезапуск игры
 def Freset():
     global lock1, lock2, lock3, lock4, pause, startbool, playername, leaderboard, rules, prevpause
@@ -112,13 +272,7 @@ def Freset():
         else:
             canv.delete(ALL)
             for j in Objects:
-                if j[0]==2:
-                    circleCircle0t(j[1])
-            for j in Objects:
-                if j[0]==0:
-                    circle0t(j[1])
-                if j[0]==1:
-                    square0t(j[1])
+                j.draw()
 reset = Button(d, text="start", command=Freset, font="Verdana 25")
 reset.grid(column=4, row=5)
 # кнопка паузы
@@ -155,13 +309,7 @@ def Fleaderboard():
             else:
                 canv.delete(ALL)
                 for j in Objects:
-                    if j[0]==2:
-                        circleCircle0t(j[1])
-                for j in Objects:
-                    if j[0]==0:
-                        circle0t(j[1])
-                    if j[0]==1:
-                        square0t(j[1])
+                    j.draw()
         Bleaderboard.configure(text = "open leaderboard")
 Bleaderboard = Button(d, text="open leaderboard", command=Fleaderboard, font="Verdana 25")
 Bleaderboard.grid(column=6, row=5)
@@ -187,13 +335,7 @@ def Frules():
             else:
                 canv.delete(ALL)
                 for j in Objects:
-                    if j[0]==2:
-                        circleCircle0t(j[1])
-                for j in Objects:
-                    if j[0]==0:
-                        circle0t(j[1])
-                    if j[0]==1:
-                        square0t(j[1])
+                    j.draw()
 Brules = Button(d, text="?!", command=Frules, font="Verdana 25")
 Brules.grid(column=7, row=5)
 # предохранитель перезапуска
@@ -274,7 +416,7 @@ Difficulty="1"
 #1 - квадрат
 Objects=[]
 frameTime=0
-frameTime0=16
+frameTime0=1600
 time1x=6000
 counter=0
 timeMultiplier=2
@@ -300,14 +442,14 @@ def start():
     timeMultiplier=2
     Difficulty='difficulty='+mstr(2/timeMultiplier)+'   radius bonus='+str(clickStreak)
     #круги
-    for j in range(0, random.randint(3,7), 1):
-        Objects.append(randCircle())
+    for j in range(0, random.randint(2,6), 1):
+        Objects.append(Circle())
     #квадраты    
-    for j in range(0, random.randint(3,7), 1):
-        Objects.append(randSquare())
+    for j in range(0, random.randint(2,6), 1):
+        Objects.append(Square())
     #бублики
-    for j in range(0, random.randint(3,7), 1):
-        Objects.append(randCircleCircle())
+    for j in range(0, random.randint(2,6), 1):
+        Objects.append(CircleCircle())
         
 # расставляет параметры для запуска игры
 def start0():
@@ -345,6 +487,8 @@ def saveresult():
     for i in LeaderBoardText:
         f1.write(i[0])
         f2.write(str(i[1])+'\n')
+    f1.close()
+    f2.close()
 
 # загружает таблицу лидеров
 def loadLeaderBoardText():
@@ -372,6 +516,8 @@ def loadLeaderBoardText():
     for i in range(0, 10, 1):
         A.append(LeaderBoardText[i])
     LeaderBoardText = A
+    f1.close()
+    f2.close()
 
 # выдаёт либо 1 либо -1
 def randSign():
@@ -379,6 +525,13 @@ def randSign():
     a = a*2
     a = a-1
     return a
+
+# смещение полигона
+def movePoly(points, dx, dy):
+    P = []
+    for i in points:
+        P.append((i[0]+dx, i[1]+dy))
+    return P
 
 # выдаёт случайный цвет
 def randColor():
@@ -400,177 +553,6 @@ def mstr(a):
         b=b+1
     b=b/100
     return str(b)
-
-# создаёт случайный круг
-#def randCircle():
-#    global time1x, timeMultiplier
-#    x = random.randint(100,700)
-#    y = random.randint(100,500)
-#    r = random.randint(10,40)
-#    color = randColor()
-#    vx = randSign()*random.randint(1, 8)
-#    vy = randSign()*random.randint(1, 8)
-#    lifeTime = 4000*timeMultiplier
-#    k=time1x/lifeTime
-#    return [0, [x, y, r, color, vx, vy, lifeTime, k]]
-
-# создааёт случайный квадрат
-def randSquare():
-    global time1x, timeMultiplier
-    x = random.randint(100,700)
-    y = random.randint(100,500)
-    r = random.randint(10,40)
-    color = randColor()
-    vx = randSign()*random.randint(9, 16)
-    vy = randSign()*random.randint(9, 16)
-    lifeTime = 9000*timeMultiplier
-    k=time1x/lifeTime
-    return [1, [x, y, r, color, vx, vy, lifeTime, k]]
-
-# обрабатывает движение и столкновения круга, рисует его
-#def circle(a):
-#    global width, heigth
-#    vx = a[4]
-#    vy = a[5]
-#    a[0]=a[0]+vx
-#    a[1]=a[1]+vy
-#    x = a[0]
-#    y = a[1]
-#    r = a[2]
-#    c = a[3]
-#    canv.create_oval(x-r,y-r,x+r,y+r,fill = c , width=0)
-#    if x+r>width:
-#        a[4]=-random.randint(1, 64)/8
-#    if x-r<0:
-#        a[4]=random.randint(1, 64)/8
-#    if y+r>heigth:
-#        a[5]=-random.randint(1, 64)/8
-#    if y-r<0:
-#        a[5]=random.randint(1, 64)/8
-
-# рисует круг
-#def circle0t(a):
-#    global width, heigth
-#    x = a[0]
-#    y = a[1]
-#    r = a[2]
-#    c = a[3]
-#    canv.create_oval(x-r,y-r,x+r,y+r,fill = c , width=0)
-    
-# обрабатывает движение и столкновения квадрата, рисует его
-def square(a):
-    global width, heigth
-    vx = a[4]
-    vy = a[5]
-    a[0]=a[0]+vx
-    a[1]=a[1]+vy
-    x = a[0]
-    y = a[1]
-    r = a[2]
-    c = a[3]
-    canv.create_rectangle(x+r, y+r, x-r, y-r, fill=c, width=0)
-    if x+r>width:
-        a[4]=-random.randint(1, 128)/8
-    if x-r<0:
-        a[4]=random.randint(1, 128)/8
-    if y+r>heigth:
-        a[5]=-random.randint(1, 128)/8
-    if y-r<0:
-        a[5]=random.randint(1, 128)/8
-
-# рисует квадрат
-def square0t(a):
-    global width, heigth
-    x = a[0]
-    y = a[1]
-    r = a[2]
-    c = a[3]
-    canv.create_rectangle(x+r, y+r, x-r, y-r, fill=c, width=0)
-
-# создааёт случайный бублик
-def randCircleCircle():
-    global time1x, timeMultiplier
-    x = random.randint(100,700)
-    y = random.randint(100,500)
-    R = random.randint(20,60)
-    r = random.randint(10,R-10)
-    color = randColor()
-    vx = randSign()*random.randint(1, 8)
-    vy = randSign()*random.randint(1, 8)
-    ax = randSign()*random.randint(1, 8)/8
-    ay = randSign()*random.randint(1, 8)/8
-    lifeTime = 6000*timeMultiplier
-    k=time1x/lifeTime
-    Points = []
-    n = 90
-    for i in range(0, n+2, 1):
-        tmpx = R*math.cos(2*math.pi/n*i)
-        tmpy = R*math.sin(2*math.pi/n*i)
-        Points.append((tmpx, tmpy))
-    for i in range(0, n+2, 1):
-        tmpx = r*math.cos(2*math.pi/n*(n-i))
-        tmpy = r*math.sin(2*math.pi/n*(n-i))
-        Points.append((tmpx, tmpy))
-    return [2, [x, y, R, color, vx, vy, lifeTime, k, r, ax, ay, Points]]
-
-# смещение полигона
-def movePoly(points, dx, dy):
-    P = []
-    for i in points:
-        P.append((i[0]+dx, i[1]+dy))
-    return P
-
-# обрабатывает движение и столкновения бублика, рисует его
-def circleCircle(a):
-    global width, heigth
-    ax = a[9]
-    ay = a[10]
-    a[4]=a[4]+ax
-    a[5]=a[5]+ay
-    vx = a[4]
-    vy = a[5]
-    a[0]=a[0]+vx
-    a[1]=a[1]+vy
-    x = a[0]
-    y = a[1]
-    R = a[2]
-    c = a[3]
-    r = a[8]
-    points = a[11]
-    P = movePoly(points, x, y)
-    canv.create_polygon(P, fill=c, width=0)
-    #canv.create_oval(x+R, y+R, x-R, y-R, fill=c, width=0)
-    #canv.create_oval(x+r, y+r, x-r, y-r, fill='white', width=0)
-    if x+R>width:
-        a[4]=-random.randint(1, 8)
-        a[9]=randSign()*random.randint(1, 8)/32
-        a[10]=randSign()*random.randint(1, 8)/32
-    if x-R<0:
-        a[4]=random.randint(1, 8)
-        a[9]=randSign()*random.randint(1, 8)/32
-        a[10]=randSign()*random.randint(1, 8)/32
-    if y+R>heigth:
-        a[5]=-random.randint(1, 8)
-        a[9]=randSign()*random.randint(1, 8)/32
-        a[10]=randSign()*random.randint(1, 8)/32
-    if y-R<0:
-        a[5]=random.randint(1, 8)
-        a[9]=randSign()*random.randint(1, 8)/32
-        a[10]=randSign()*random.randint(1, 8)/32
-
-# рисует бублик
-def circleCircle0t(a):
-    global width, heigth
-    x = a[0]
-    y = a[1]
-    R = a[2]
-    c = a[3]
-    r = a[8]
-    points = a[11]
-    P = movePoly(points, x, y)
-    canv.create_polygon(P, fill=c, width=0)
-    #canv.create_oval(x+R, y+R, x-R, y-R, fill=c, width=0)
-    #canv.create_oval(x+r, y+r, x-r, y-r, fill='white', width=0)
 
 # функция  для сортировки
 def mySort(a):
@@ -636,20 +618,15 @@ def draw():
                 c.delete(ALL)
                 c.create_text(30, 10, text=I, justify=CENTER, font="Verdana 14", anchor=W)
                 c.create_text(770, 10, text=Difficulty, justify=CENTER, font="Verdana 14", anchor=E)
-                # обработка движения
-                for j in Objects:
-                    if j[0]==2:
-                        circleCircle(j[1])
-                for j in Objects:
-                    if j[0]==0:
-                        circle(j[1])
-                    if j[0]==1:
-                        square(j[1])
                 # обработка времени жизни объектов
+                tmpObj = []
                 for j in Objects: 
-                    j[1][6]=j[1][6]-frameTime
-                    if j[1][6]<0:
-                        Objects.remove(j)
+                    if j.checkLifeTime(frameTime):
+                        tmpObj.append(j)
+                # обработка движения
+                Objects = tmpObj
+                for j in Objects:
+                    j.drawAndMove()
                         
     
     
@@ -667,77 +644,8 @@ def click(event):
         tmpR=50-MouseRadius
         tmpR=tmpR*(timeMultiplier)**0.5
         for j in Objects:
-            tmp = 1
-            if j[0]==0:  # обработка объекта если это круг
-                if (event.x-j[1][0])*(event.x-j[1][0])+(event.y-j[1][1])*(event.y-j[1][1])<((j[1][2]+tmpR)*(j[1][2]+tmpR)):
-                    counter+=1
-                    k1=(16+j[1][4]*j[1][4]+j[1][5]*j[1][5])/16
-                    k2=20*20/j[1][2]/j[1][2]
-                    s.append(math.pi/4*k1*k2*j[1][7])
-                    tmp2=random.randint(0,11)
-                    if tmp2>=6:
-                        obj.append(randCircle())
-                        obj.append(randCircle())
-                    if tmp2==4 or tmp2==5:
-                        obj.append(randCircle())
-                        obj.append(randSquare())
-                    if tmp2==2 or tmp2==3:
-                        obj.append(randCircle())
-                        obj.append(randCircleCircle())
-                    if tmp2==1:
-                        obj.append(randSquare())
-                        obj.append(randSquare())
-                    if tmp2==0:
-                        obj.append(randCircleCircle())
-                        obj.append(randCircleCircle())
-                    tmp = 0
-            if j[0]==1: # обработка объекта если это квадрат
-                if (((event.x>j[1][0]-j[1][2]-tmpR) and (event.x<j[1][0]+j[1][2]+tmpR)) and ((event.y>j[1][1]-j[1][2]-tmpR) and (event.y<j[1][1]+j[1][2]+tmpR))):
-                    counter+=1
-                    k1=(16+j[1][4]*j[1][4]+j[1][5]*j[1][5])/16
-                    k2=20*20/j[1][2]/j[1][2]
-                    s.append(1*k1*k2*j[1][7])
-                    tmp2=random.randint(0,11)
-                    if tmp2>=6:
-                        obj.append(randSquare())
-                        obj.append(randSquare())
-                    if tmp2==4 or tmp2==5:
-                        obj.append(randCircle())
-                        obj.append(randSquare())
-                    if tmp2==2 or tmp2==3:
-                        obj.append(randSquare())
-                        obj.append(randCircleCircle())
-                    if tmp2==1:
-                        obj.append(randCircle())
-                        obj.append(randCircle())
-                    if tmp2==0:
-                        obj.append(randCircleCircle())
-                        obj.append(randCircleCircle())
-                    tmp = 0
-            if j[0]==2: # обработка объекта если это бублик
-                if (event.x-j[1][0])*(event.x-j[1][0])+(event.y-j[1][1])*(event.y-j[1][1])<((j[1][2]+tmpR)*(j[1][2]+tmpR)) and (event.x-j[1][0])*(event.x-j[1][0])+(event.y-j[1][1])*(event.y-j[1][1])>((j[1][8]-tmpR)*(j[1][8]-tmpR)):
-                    counter+=1
-                    k1=(16+j[1][4]*j[1][4]+j[1][5]*j[1][5])/16
-                    k2=20*20/(j[1][2]*j[1][2]-j[1][8]*j[1][8])
-                    s.append(math.pi/4*k1*k2*j[1][7]*1.5)
-                    tmp2=random.randint(0,11)
-                    if tmp2>=6:
-                        obj.append(randCircleCircle())
-                        obj.append(randCircleCircle())
-                    if tmp2==4 or tmp2==5:
-                        obj.append(randCircleCircle())
-                        obj.append(randSquare())
-                    if tmp2==2 or tmp2==3:
-                        obj.append(randCircle())
-                        obj.append(randCircleCircle())
-                    if tmp2==1:
-                        obj.append(randSquare())
-                        obj.append(randSquare())
-                    if tmp2==0:
-                        obj.append(randCircle())
-                        obj.append(randCircle())
-                    tmp = 0
-            if tmp: # оставляет объекты по которым небыло попадания
+            a = j.checkHit(event.x, event.y, tmpR, obj, s)
+            if a[0]: # оставляет объекты по которым небыло попадания
                 obj.append(j)
             else: # усложнение при попадании
                 timeMultiplier = timeMultiplier*0.9931
