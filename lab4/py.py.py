@@ -212,7 +212,8 @@ class CircleCircle:
             counter+=1
             k1=(16+self.vx*self.vx+self.vy*self.vy)/16
             k2=20*20/(self.R*self.R-self.r*self.r)
-            s.append(math.pi/4*k1*k2*self.k*2)
+            k3=(64+self.vx*self.vx+self.vy*self.vy)/64
+            s.append(math.pi/4*k1*k2*self.k*k3)
             tmp2=random.randint(0,11)
             if tmp2>=6:
                 obj.append(CircleCircle())
@@ -416,7 +417,7 @@ Difficulty="1"
 #1 - квадрат
 Objects=[]
 frameTime=0
-frameTime0=1600
+frameTime0=16
 time1x=6000
 counter=0
 timeMultiplier=2
