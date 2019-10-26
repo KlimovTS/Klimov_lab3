@@ -1,4 +1,5 @@
 from random import randrange as rnd,choice
+import random
 from tkinter import*
 import math
 import time
@@ -20,7 +21,7 @@ class ball():
  def set_coords(self):
   canv.coords(self.id,self.x-self.r,self.y-self.r,self.x+self.r,self.y+self.r)
  def move(self):
-  if self.y<=500:
+  if self.y<=550:
    self.vy-=1.2
    self.y-=self.vy
    self.x+=self.vx
@@ -30,7 +31,7 @@ class ball():
    if self.vx**2+self.vy**2>10:
     self.vy=-self.vy/2
     self.vx=self.vx/2
-    self.y=499
+    self.y=549
    if self.live<0:
     balls.pop(balls.index(self))
     canv.delete(self.id)
@@ -40,7 +41,7 @@ class ball():
    self.vx=-self.vx/2
    self.x=779
  def hittest(self,ob):
-  if abs(ob.x-self.x)<=(self.r+ob.r)and abs(ob.y-self.y)<=(self.r+ob.r):
+  if abs(ob.x-self.x)**2+abs(ob.y-self.y)**2<=(self.r+ob.r)**2:
    return True
   else:
    return False
@@ -88,9 +89,26 @@ class target():
  def __init__(self):
   self.points=0
   self.id=canv.create_oval(0,0,0,0)
-  self.id_points=canv.create_text(30,30,text=self.points,font='28')
+  #self.id_points=canv.create_text(30,30,text=self.points,font='28')
   self.new_target()
   self.live=1
+  self.vx=0
+  self.vy=0
+ def move(self):
+  self.x+=self.vx
+  self.y+=self.vy
+  x=self.x
+  y=self.y
+  r=self.r
+  if x<300+r:
+   self.vx=abs(self.vx)
+  if x>800-r:
+   self.vx=-abs(self.vx)
+  if y<50+r:
+   self.vy=abs(self.vx)
+  if y>550-r:
+   self.vy=-abs(self.vx)
+  canv.coords(self.id,x-r,y-r,x+r,y+r)
  def new_target(self):
   x=self.x=rnd(600,780)
   y=self.y=rnd(300,550)
@@ -98,18 +116,25 @@ class target():
   color=self.color='red'
   canv.coords(self.id,x-r,y-r,x+r,y+r)
   canv.itemconfig(self.id,fill=color)
+  self.vx=rnd(-5,5)
+  self.vy=rnd(-5,5)
  def hit(self,points=1):
   canv.coords(self.id,-10,-10,-10,-10)
   self.points+=points
-  canv.itemconfig(self.id_points,text=self.points)
+  #canv.itemconfig(self.id_points,text=self.points)
 t1=target()
+t2=target()
+t3=target()
+id_points=canv.create_text(30,30,text=t1.points+t2.points+t3.points,font='28')
 screen1=canv.create_text(400,300,text='',font='28')
 g1=gun()
 bullet=0
 balls=[]
 def new_game(event=''):
- global gun,t1,screen1,balls,bullet
+ global gun,t1,t2,t3,id_points,screen1,balls,bullet
  t1.new_target()
+ t2.new_target()
+ t3.new_target()
  bullet=0
  balls=[]
  canv.bind('<Button-1>',g1.fire2_start)
@@ -117,15 +142,31 @@ def new_game(event=''):
  canv.bind('<Motion>',g1.targetting)
  z=0.03
  t1.live=1
- while t1.live or balls:
+ t2.live=1
+ t3.live=1
+ while t1.live or t2.live or t3.live or balls:
   for b in balls:
    b.move()
    if b.hittest(t1)and t1.live:
     t1.live=0
     t1.hit()
+   if b.hittest(t2)and t2.live:
+    t2.live=0
+    t2.hit()
+   if b.hittest(t3)and t3.live:
+    t3.live=0
+    t3.hit()
+   if t1.live==0 and t2.live==0 and t3.live==0:
     canv.bind('<Button-1>','')
     canv.bind('<ButtonRelease-1>','')
-    canv.itemconfig(screen1,text='Вы уничтожили цель за '+str(bullet)+' выстрелов')
+    canv.itemconfig(screen1,text='Вы уничтожили цели за '+str(bullet)+' выстрелов')
+   canv.itemconfig(id_points,text=t1.points+t2.points+t3.points)
+  if t1.live==1:
+   t1.move()
+  if t2.live==1:
+   t2.move()
+  if t3.live==1:
+   t3.move()
   canv.update()
   time.sleep(0.03)
   g1.targetting()
