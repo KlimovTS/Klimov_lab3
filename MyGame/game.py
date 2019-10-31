@@ -34,6 +34,15 @@ def rotate(p, a, x, y):
         P.append((cos*tmpx+sin*tmpy+x, -sin*tmpx+cos*tmpy+y))
     return P
 
+def rounding(a):
+    if a-int(a)>=0.5:
+        return int(a)+1
+    else:
+        return int(a)
+
+def colorRGB(r, g, b):
+  return "#%02X%02X%02X" % (rounding(r), rounding(g), rounding(b))
+
 class Circle():
     def __init__(self, x, y, r, c):
         self.x = x
@@ -49,7 +58,8 @@ class Bullet():
         self.id = idCounter
         idCounter += 1
         self.owner = owner
-        self.circle = Circle(owner.owner.x+rotate([self.owner.position], self.owner.owner.angle, 0, 0)[0][0]*self.owner.owner.extraSize, owner.owner.y+rotate([self.owner.position], self.owner.owner.angle, 0, 0)[0][1]*self.owner.owner.extraSize, owner.bulletRadius*self.owner.owner.extraSize, owner.owner.color)
+        self.time = 2000
+        self.circle = Circle(owner.owner.x+rotate([self.owner.position], self.owner.owner.angle, 0, 0)[0][0]*self.owner.owner.extraSize, owner.owner.y+rotate([self.owner.position], self.owner.owner.angle, 0, 0)[0][1]*self.owner.owner.extraSize, owner.bulletRadius*self.owner.owner.extraSize, colorRGB(self.owner.owner.color[0], self.owner.owner.color[1], self.owner.owner.color[2]))
         n=1000000000
         tmp3 = random.randint(-owner.bulletSpeedY*n, owner.bulletSpeedY*n)/n
         tmp4 = random.randint(0, n)/n
@@ -58,8 +68,17 @@ class Bullet():
         self.vx = (math.cos(owner.position[2]+owner.owner.angle)*(owner.bulletSpeedX+tmp2)+math.sin(owner.position[2]+owner.owner.angle)*tmp)*self.owner.owner.extraSize+self.owner.owner.vx
         self.vy = (-math.sin(owner.position[2]+owner.owner.angle)*(owner.bulletSpeedX+tmp2)+math.cos(owner.position[2]+owner.owner.angle)*tmp)*self.owner.owner.extraSize+self.owner.owner.vy
     def move(self):
+        global width, heigth
         self.circle.x+=self.vx
         self.circle.y+=self.vy
+        if self.circle.x>width-1:
+            self.circle.x=0
+        if self.circle.x<0:
+            self.circle.x=width-1
+        if self.circle.y>heigth-1:
+            self.circle.y=0
+        if self.circle.y<0:
+            self.circle.y=heigth-1
     def draw(self):
         self.circle.draw()
     def outside(self):
@@ -83,13 +102,14 @@ class Gun():
         self.owner = owner
         self.position = position
         self.name = 'Simple Gun'
-        self.ReloadingTime = 250
+        self.ReloadingTime = 125
         self.Reloading = 0
         self.bulletSpeedX = 50
-        self.bulletSpeedY = 1
+        self.bulletSpeedY = 2
         self.bulletDamage = 10
         self.bulletRadius = 5*self.owner.extraSize
-        self.bulletCount = 150
+        self.bulletCount = 1
+        self.energyConsumption = 5
         self.bullets = []
     def tick(self):
         global FrameTime, keyboard
@@ -102,16 +122,18 @@ class Gun():
         self.targeting()
         for i in self.bullets:
             i.move()
-            if i.outside():
+            i.time -= FrameTime
+            if i.time<0:
                 self.bullets.remove(i)
         self.drawBullets()
     def shoot(self):
-        if self.Reloading==self.ReloadingTime:
+        if self.Reloading==self.ReloadingTime and self.energyConsumption<=self.owner.energy:
             for i in range(0, self.bulletCount):
                 self.bullets.append(Bullet(self))
             self.Reloading=0
+            self.owner.energy -= self.energyConsumption
     def draw(self):
-        canv.create_oval(self.owner.x+rotate([self.position], self.owner.angle, 0, 0)[0][0]*self.owner.extraSize+10*self.owner.extraSize, self.owner.y+rotate([self.position], self.owner.angle, 0, 0)[0][1]*self.owner.extraSize+10*self.owner.extraSize, self.owner.x+rotate([self.position], self.owner.angle, 0, 0)[0][0]*self.owner.extraSize-10*self.owner.extraSize, self.owner.y+rotate([self.position], self.owner.angle, 0, 0)[0][1]*self.owner.extraSize-10*self.owner.extraSize, fill = 'black', width=0)
+        canv.create_oval(self.owner.x+rotate([self.position], self.owner.angle, 0, 0)[0][0]*self.owner.extraSize+10*self.owner.extraSize, self.owner.y+rotate([self.position], self.owner.angle, 0, 0)[0][1]*self.owner.extraSize+10*self.owner.extraSize, self.owner.x+rotate([self.position], self.owner.angle, 0, 0)[0][0]*self.owner.extraSize-10*self.owner.extraSize, self.owner.y+rotate([self.position], self.owner.angle, 0, 0)[0][1]*self.owner.extraSize-10*self.owner.extraSize, fill = colorRGB(self.owner.color[0]/4, self.owner.color[1]/4, self.owner.color[2]/4), width=2*self.owner.extraSize, outline = colorRGB(255, 255, 255))
     def drawBullets(self):
         for i in self.bullets:
             i.draw()
@@ -129,12 +151,17 @@ class Gun():
                     tmp = self.bulletDamage-st2.shield
                     st2.shield=0
                     st2.hp-=tmp
+        if st2.hp<0:
+            return True
+        else:
+            return False
 
 class Starship():
-    def __init__(self, color = 'grey', controls = ['w', 'a', 's', 'd', 'space']):
-        global idCounter, width, heigth
+    def __init__(self, color = [150, 150, 150], controls = ['w', 'a', 's', 'd', 'space']):
+        global idCounter, width, heigth, FrameTime
         self.id = idCounter
         idCounter += 1
+        self.score = 0
         self.hullPoly = [(-30, -30), (-30, 30), (60, 0)]
         self.thrustPoly = [(-30, -10), (-30, 10)]
         self.collisionR = 60
@@ -145,7 +172,8 @@ class Starship():
         self.vy = 0
         self.ax = 0
         self.ay = 0
-        self.angle = 0
+        n = 1000000000
+        self.angle = random.randint(0, rounding(2*math.pi*n))/n
         self.extraSize = 0.5
         self.maxShield = 100
         self.shield = self.maxShield
@@ -159,6 +187,10 @@ class Starship():
         self.controls = controls
         self.force = 0
         self.mass = 50
+        self.maxEnergy = 100
+        self.energyRegeneration = 20*FrameTime/1000
+        self.energy = self.maxEnergy
+        self.notCrashed = 1
         gunsPositions = [[-20, -30, 0], [-20, 30, 0]]
         self.guns = []
         for i in gunsPositions:
@@ -170,6 +202,9 @@ class Starship():
         self.hp+=self.hpRegeneration
         if self.hp>self.maxHp:
             self.hp=self.maxHp
+        self.energy+=self.energyRegeneration
+        if self.energy>self.maxEnergy:
+            self.energy=self.maxEnergy
         self.move()
         self.draw()
         for i in self.guns:
@@ -185,8 +220,8 @@ class Starship():
         tmp2 = []
         for  i in self.hullPoly:
             tmp2.append((i[0]*self.extraSize, i[1]*self.extraSize))
-        canv.create_polygon(rotate(movePoly(tmp2, self.x, self.y), self.angle, self.x, self.y), fill = 'grey', width=0)
-        canv.create_polygon(rotate(movePoly(tmp, self.x, self.y), self.angle, self.x, self.y), fill = 'orange', width=0)
+        canv.create_polygon(rotate(movePoly(tmp2, self.x, self.y), self.angle, self.x, self.y), fill = colorRGB(self.color[0]/2, self.color[1]/2, self.color[2]/2), width=2*self.extraSize, outline = colorRGB(255, 255, 255))
+        canv.create_polygon(rotate(movePoly(tmp, self.x, self.y), self.angle, self.x, self.y), fill = colorRGB(min((-(self.force/self.maxForce)**2+0.5*self.force/self.maxForce+1), 1)*255, min((-14/3*(self.force/self.maxForce)**2+31/6*self.force/self.maxForce+0), 1)*255, min((-2*(self.force/self.maxForce)**2+3*self.force/self.maxForce+0), 1)*255), width=0)
     def move(self):
         global width, heigth
 #        if keyboard.key9==1:
@@ -242,10 +277,33 @@ class Starship():
         if self.y<0:
             self.y=heigth-1
     def checkHit(self, obj):
+        a=0
+        if obj.notCrashed:
+            for i in self.guns:
+                a = a or i.checkHit(obj)
+        return a and obj.notCrashed
+    def printStats(self, x, y):
+        canv.create_text(x, y, text = 'Score = ' + str(self.score), font = 'Verdana 30',  fill  = colorRGB(self.color[0], self.color[1], self.color[2]))
+        #canv.create_text(x, y+40, text = 'V = ' + mstr(math.sqrt((self.vx)**2+(self.vy)**2)), font = 'Verdana 20',  fill  = colorRGB(self.color[0], self.color[1], self.color[2]))
+        canv.create_text(x, y+70, text = '|'*rounding(20*self.shield/self.maxShield), font = 'Verdana 20',  fill  = colorRGB(0, 0, 255))
+        canv.create_text(x, y+100, text = '|'*rounding(20*self.hp/self.maxHp), font = 'Verdana 20',  fill  = colorRGB(255, 0, 0))
+        canv.create_text(x, y+130, text = '|'*rounding(20*self.energy/self.maxEnergy), font = 'Verdana 20',  fill  = colorRGB(0, 255, 0))
+    def respawn(self):
+        self.x = random.randint(0, width-1)
+        self.y = random.randint(0, heigth-1)
+        self.vx = 0
+        self.vy = 0
+        n = 1000000000
+        self.angle = random.randint(0, rounding(2*math.pi*n))/n
+        self.shield = self.maxShield
+        self.hp = self.maxHp
+        self.energy = self.maxEnergy
+        self.notCrashed = 1
+        self.force = 0
         for i in self.guns:
-            i.checkHit(obj)
-        
-        
+            i.bullets = []
+    def crash(self):
+        self.notCrashed = 0
 
 if __name__=='__main__':
     root = tkinter.Tk()
@@ -253,21 +311,38 @@ if __name__=='__main__':
     heigth = 800
     WH =  str(width)+'x'+str(heigth)
     root.geometry(WH)
-    canv = tkinter.Canvas(root, width=width, height=heigth, bg='white')
+    canv = tkinter.Canvas(root, width=width, height=heigth, bg='black')
     canv.pack()
     keyboard = MyKeyboard.Keyboard(root)
     x=400
     y=300
     r=100
-    Starship001 = Starship(color = 'red', controls = ['9', 'i', 'o', 'p', 'l'])
-    Starship002 = Starship(color = 'blue')
+    Starship001 = Starship(color = [255, 0, 0])
+    Starship002 = Starship(color = [0, 0, 255], controls = ['9', 'i', 'o', 'p', 'l'])
+    reset =  0
     def draw():
-        global x, y, r, FrameTime
+        global x, y, r, FrameTime, reset
         canv.delete(tkinter.ALL)
-        Starship001.checkHit(Starship002)
-        Starship002.checkHit(Starship001)
-        Starship001.tick()
-        Starship002.tick()
+        if  Starship001.notCrashed:
+            if Starship001.checkHit(Starship002):
+                Starship002.crash()
+                Starship001.score += 1
+        if  Starship002.notCrashed:
+            if Starship002.checkHit(Starship001):
+                Starship001.crash()
+                Starship002.score += 1
+        if  Starship001.notCrashed:
+            Starship001.tick()
+        if  Starship002.notCrashed:
+            Starship002.tick()
+        Starship001.printStats(150, 60)
+        Starship002.printStats(1450, 60)
+        if not (Starship001.notCrashed and Starship002.notCrashed):
+            reset += 1
+        if reset > 1000/FrameTime*5:
+            reset = 0
+            Starship001.respawn()
+            Starship002.respawn()
         #canv.create_oval(x+r, y+r, x-r, y-r, fill = "red", width=0)
 #        if keyboard.keyw==1:
 #            y-=1
