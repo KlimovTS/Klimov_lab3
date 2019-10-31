@@ -1,7 +1,7 @@
-<<<<<<< HEAD:lab4/additionalAnimations/dragon.py
 from graph import  *
 import copy
 import math
+import time
 
 
 
@@ -11,7 +11,7 @@ new_Points=[[0, 0], [0, -1]]
 global_polyline=0
 new_Counter=0
 quality = 100
-timePerStage = 2
+timePerStage = 2000
 global_max_stage  = 15
 global_cur_stage  = 1
 
@@ -129,7 +129,7 @@ def F():
 
 onTimer(F, int(timePerStage*1000/quality))
 
-=======
+
 from graph import  *
 import copy
 import math
@@ -262,5 +262,4 @@ time.sleep(1)
 
 onTimer(F, int(timePerStage*1000/quality))
 
->>>>>>> 56ece82b751369d368171b40cfb8631a25e9ba4b:lab3.3/postroenie_fractala_dracona/dragon.py
 run()
