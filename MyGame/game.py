@@ -111,6 +111,7 @@ class Gun():
         self.bulletCount = 1
         self.energyConsumption = 5
         self.bullets = []
+        exec(position[3])
     def tick(self):
         global FrameTime, keyboard
         self.Reloading += FrameTime
@@ -191,7 +192,7 @@ class Starship():
         self.energyRegeneration = 20*FrameTime/1000
         self.energy = self.maxEnergy
         self.notCrashed = 1
-        gunsPositions = [[-20, -30, 0], [-20, 30, 0]]
+        gunsPositions = [[-20, -30, 0, 'self.bulletSpeedX=35'], [-20, 30, 0, 'self.bulletSpeedX=35'], [40, 0, 0, 'self.bulletDamage=100\nself.energyConsumption=75\nself.ReloadingTime=5000\nself.bulletSpeedY=1']]
         self.guns = []
         for i in gunsPositions:
             self.guns.append(Gun(self, i))
@@ -288,6 +289,8 @@ class Starship():
         canv.create_text(x, y+70, text = '|'*rounding(20*self.shield/self.maxShield), font = 'Verdana 20',  fill  = colorRGB(0, 0, 255))
         canv.create_text(x, y+100, text = '|'*rounding(20*self.hp/self.maxHp), font = 'Verdana 20',  fill  = colorRGB(255, 0, 0))
         canv.create_text(x, y+130, text = '|'*rounding(20*self.energy/self.maxEnergy), font = 'Verdana 20',  fill  = colorRGB(0, 255, 0))
+        for i in range(0, len(self.guns)):
+            canv.create_text(x, y+160+i*30, text = '|'*rounding(20*self.guns[i].Reloading/self.guns[i].ReloadingTime), font = 'Verdana 20',  fill  = colorRGB(255, 255, 0))
     def respawn(self):
         self.x = random.randint(0, width-1)
         self.y = random.randint(0, heigth-1)
@@ -302,6 +305,7 @@ class Starship():
         self.force = 0
         for i in self.guns:
             i.bullets = []
+            i.Reloading = 0
     def crash(self):
         self.notCrashed = 0
 
