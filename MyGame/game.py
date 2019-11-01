@@ -192,7 +192,8 @@ class Starship():
         self.energyRegeneration = 20*FrameTime/1000
         self.energy = self.maxEnergy
         self.notCrashed = 1
-        gunsPositions = [[-20, -30, 0, 'self.bulletSpeedX=35'], [-20, 30, 0, 'self.bulletSpeedX=35'], [40, 0, 0, 'self.bulletDamage=100\nself.energyConsumption=75\nself.ReloadingTime=5000\nself.bulletSpeedY=1']]
+        # , [40, 0, 0, 'self.bulletDamage=100\nself.energyConsumption=75\nself.ReloadingTime=5000\nself.bulletSpeedY=1']
+        gunsPositions = [[-20, -30, 0, 'self.bulletSpeedX=35'], [-20, 30, 0, 'self.bulletSpeedX=35']]
         self.guns = []
         for i in gunsPositions:
             self.guns.append(Gun(self, i))
@@ -322,7 +323,7 @@ if __name__=='__main__':
     y=300
     r=100
     Starship001 = Starship(color = [255, 0, 0])
-    Starship002 = Starship(color = [0, 0, 255], controls = ['9', 'i', 'o', 'p', 'l'])
+    Starship002 = Starship(color = [0, 255, 0], controls = ['9', 'i', 'o', 'p', 'l'])
     reset =  0
     def draw():
         global x, y, r, FrameTime, reset
