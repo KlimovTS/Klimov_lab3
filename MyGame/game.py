@@ -52,6 +52,13 @@ class Circle():
     def draw(self):
         canv.create_oval(self.x+self.r, self.y+self.r, self.x-self.r, self.y-self.r, fill = self.c, width=0)
 
+def getAngle(dx, dy):
+    if dx<0:
+        targetAngle=math.atan((-dy)/(max(dx, 0.000000001, key=abs)))+math.pi
+    else:
+        targetAngle=math.atan((-dy)/(max(dx, 0.000000001, key=abs)))
+    return targetAngle
+
 class Bullet():
     def __init__(self, owner):
         global idCounter
@@ -102,14 +109,14 @@ class Gun():
         self.owner = owner
         self.position = position
         self.name = 'Simple Gun'
-        self.ReloadingTime = 125
+        self.ReloadingTime = 125*1
         self.Reloading = 0
         self.bulletSpeedX = 50
-        self.bulletSpeedY = 2
-        self.bulletDamage = 10
+        self.bulletSpeedY = 2*1
+        self.bulletDamage = 10*1
         self.bulletRadius = 5*self.owner.extraSize
         self.bulletCount = 1
-        self.energyConsumption = 5
+        self.energyConsumption = 5*1
         self.bullets = []
         exec(position[3])
     def tick(self):
@@ -173,14 +180,15 @@ class Starship():
         self.vy = 0
         self.ax = 0
         self.ay = 0
+        self.botMode = 0
         n = 1000000000
         self.angle = random.randint(0, rounding(2*math.pi*n))/n
-        self.extraSize = 0.5
+        self.extraSize = 0.25
         self.maxShield = 100
         self.shield = self.maxShield
         self.maxHp = 100
         self.hp =self.maxHp
-        self.shieldRegeneration = 0.1
+        self.shieldRegeneration = 0.1*1
         self.hpRegeneration = 0.01
         self.engineForceAcseleration = 0.1
         self.maxForce = 10
@@ -189,7 +197,7 @@ class Starship():
         self.force = 0
         self.mass = 50
         self.maxEnergy = 100
-        self.energyRegeneration = 20*FrameTime/1000
+        self.energyRegeneration = 20*FrameTime/1000*1
         self.energy = self.maxEnergy
         self.notCrashed = 1
         # , [40, 0, 0, 'self.bulletDamage=100\nself.energyConsumption=75\nself.ReloadingTime=5000\nself.bulletSpeedY=1']
@@ -270,6 +278,8 @@ class Starship():
         self.vy=self.vy*t2
         self.x+=self.vx
         self.y+=self.vy
+        if self.angle>2*math.pi:
+            self.angle-=2*math.pi
         if self.x>width-1:
             self.x=0
         if self.x<0:
@@ -309,6 +319,229 @@ class Starship():
             i.Reloading = 0
     def crash(self):
         self.notCrashed = 0
+    def minRange(self, a):
+        return math.sqrt((a[0]-self.x)**2+(a[1]-self.y)**2)
+    def botMachineGun1(self, target):
+        global width, heigth
+        # выбор ближайшей точки прицеливания
+        targetPoints = [[target.x+width, target.y+heigth],  [target.x, target.y+heigth],  [target.x-width, target.y+heigth],
+                        [target.x+width, target.y],  [target.x, target.y],  [target.x-width, target.y],
+                        [target.x+width, target.y-heigth],  [target.x, target.y-heigth],  [target.x-width, target.y-heigth]]
+        targetPoint = min(targetPoints, key = self.minRange)
+        # бот целится в цель
+        dx = targetPoint[0]-self.x
+        dy = targetPoint[1]-self.y
+        targetAngle=0
+        dx2 = 0
+        dy2 = 0
+        l = math.sqrt((dx+dx2)**2+(dy+dy2)**2)
+        t = l/self.guns[0].bulletSpeedX/self.extraSize
+        prevT=t
+        t1 = 0.025*target.extraSize
+        t2 = 0.99
+        targetA = target.angle*1.0
+        targetForce = target.force*1.0
+        targetMass = target.mass*1.0
+        targetVX = target.vx*1.0
+        targetVY = target.vy*1.0
+        t0=t
+        if self.botMode==0:
+            while t0>0:
+                tmpt=min(1, t0)
+                ax = targetForce/targetMass*math.cos(targetA)*target.extraSize
+                ay = -targetForce/targetMass*math.sin(targetA)*target.extraSize
+                targetVX+=ax*tmpt
+                targetVY+=ay*tmpt
+                targetVX-=min([math.copysign(t1*math.sqrt((targetVX**2)/(targetVX**2+targetVY**2+0.000000001)), targetVX), targetVX], key=F1)*tmpt
+                targetVY-=min([math.copysign(t1*math.sqrt((targetVY**2)/(targetVX**2+targetVY**2+0.000000001)), targetVY), targetVY], key=F1)*tmpt
+                targetVX=targetVX*t2*tmpt
+                targetVY=targetVY*t2*tmpt
+                dx2+=targetVX*tmpt-self.vx*tmpt
+                dy2+=targetVY*tmpt-self.vy*tmpt
+                l = math.sqrt((dx+dx2)**2+(dy+dy2)**2)
+                t = l/self.guns[0].bulletSpeedX/self.extraSize
+                t0+=t-prevT
+                prevT=t
+                t0-=1
+        if dx2==0 and dy2==0:
+            dx2+=(targetVX-self.vx)*t
+            dy2+=(targetVY-self.vy)*t
+        if dx+dx2<0:
+            targetAngle=math.atan((-dy-dy2)/(dx+dx2))+math.pi
+        else:
+            targetAngle=math.atan((-dy-dy2)/(dx+dx2))
+        dAngle = targetAngle-self.angle
+        if dAngle>2*math.pi:
+            dAngle-=2*math.pi
+        if abs(dAngle)>math.pi:
+            if dAngle>0:
+                dAngle=-2*math.pi+dAngle
+            else:
+                dAngle=2*math.pi-dAngle
+        # поворот
+        if dAngle>0:
+            da = min((0.5+self.control/2)/5/math.sqrt(1+math.sqrt(((self.vx)**2+(self.vy)**2))), abs(dAngle))
+            if self.botMode==1:
+                da*=-1
+            self.angle += da
+            tmpvx = self.vx
+            tmpvy = self.vy
+            self.vx = math.cos(da*(0.5+self.control/2))*tmpvx + math.sin(da*(0.5+self.control/2))*tmpvy
+            self.vy = -math.sin(da*(0.5+self.control/2))*tmpvx + math.cos(da*(0.5+self.control/2))*tmpvy
+        else:
+            da = min((0.5+self.control/2)/5/math.sqrt(1+math.sqrt(((self.vx)**2+(self.vy)**2))), abs(dAngle))
+            da*=-1
+            if self.botMode==1:
+                da*=-1
+            self.angle += da
+            tmpvx = self.vx
+            tmpvy = self.vy
+            self.vx = math.cos(da*(0.5+self.control/2))*tmpvx + math.sin(da*(0.5+self.control/2))*tmpvy
+            self.vy = -math.sin(da*(0.5+self.control/2))*tmpvx + math.cos(da*(0.5+self.control/2))*tmpvy
+        # движение 
+        self.force+=self.engineForceAcseleration
+        if self.force > self.maxForce:
+            self.force = self.maxForce
+        # переключение стрельбы
+        if self.botMode==0:
+            for i in self.guns:
+                if abs(dAngle)<(target.collisionR*target.extraSize/l):
+                    if target.notCrashed:
+                        if l/self.guns[0].bulletSpeedX/self.extraSize<2000/FrameTime:
+                            i.shoot()
+            if self.energy<10:
+                self.botMode=1
+        if self.botMode==1:
+            if self.energy>0.95*self.maxEnergy:
+                self.botMode=0
+            if self.energy>max(2*(target.hp*1+target.shield*1)/(self.guns[0].bulletDamage*self.guns[0].bulletCount)*self.guns[0].energyConsumption, len(self.guns)*self.guns[0].energyConsumption):
+                self.botMode=0
+    def botMachineGun2(self, target):
+        global width, heigth, FrameTime
+        self.botMode=1
+        # выбор ближайшей точки прицеливания
+        targetPoints = [[target.x+width, target.y+heigth],  [target.x, target.y+heigth],  [target.x-width, target.y+heigth],
+                        [target.x+width, target.y],  [target.x, target.y],  [target.x-width, target.y],
+                        [target.x+width, target.y-heigth],  [target.x, target.y-heigth],  [target.x-width, target.y-heigth]]
+        targetPoint = min(targetPoints, key = self.minRange)
+        # бот целится в цель
+        dx = targetPoint[0]-self.x
+        dy = targetPoint[1]-self.y
+        targetAngle=0
+        dx2 = 0
+        dy2 = 0
+        l = math.sqrt((dx+dx2)**2+(dy+dy2)**2)
+        t = l/self.guns[0].bulletSpeedX/self.extraSize
+        prevT=t
+        t1 = 0.025*target.extraSize
+        t2 = 0.99
+        targetA = target.angle*1.0
+        targetForce = target.force*1.0
+        targetMass = target.mass*1.0
+        targetVX = target.vx*1.0
+        targetVY = target.vy*1.0
+        t0=t
+        if self.botMode==0:
+            while t0>0:
+                tmpt=min(1, t0)
+                ax = targetForce/targetMass*math.cos(targetA)*target.extraSize
+                ay = -targetForce/targetMass*math.sin(targetA)*target.extraSize
+                targetVX+=ax*tmpt
+                targetVY+=ay*tmpt
+                targetVX-=min([math.copysign(t1*math.sqrt((targetVX**2)/(targetVX**2+targetVY**2+0.000000001)), targetVX), targetVX], key=F1)*tmpt
+                targetVY-=min([math.copysign(t1*math.sqrt((targetVY**2)/(targetVX**2+targetVY**2+0.000000001)), targetVY), targetVY], key=F1)*tmpt
+                targetVX=targetVX*t2*tmpt
+                targetVY=targetVY*t2*tmpt
+                dx2+=targetVX*tmpt-self.vx*tmpt
+                dy2+=targetVY*tmpt-self.vy*tmpt
+                l = math.sqrt((dx+dx2)**2+(dy+dy2)**2)
+                t = l/self.guns[0].bulletSpeedX/self.extraSize
+                t0+=t-prevT
+                prevT=t
+                t0-=1
+        if dx2==0 and dy2==0:
+            dx2+=(targetVX-self.vx)*t
+            dy2+=(targetVY-self.vy)*t
+        if self.botMode==1:
+            if len(target.guns[0].bullets)+len(target.guns[1].bullets)>0 and 1:
+                dx2=0
+                dy2=0
+                dx=0
+                dy=0
+                for i in target.guns:
+                    for j in i.bullets:
+                        A=1
+                        B=-A*j.vx/max(j.vy, 0.000000000001, key=abs)
+                        C=-1*(A*j.circle.x+B*j.circle.y)
+                        dX=j.circle.x-self.x
+                        dY=j.circle.y-self.y
+                        dVX=j.vx-self.vx
+                        dVY=j.vy-self.vy
+                        alpha=getAngle(dX, dY)
+                        alpha2=getAngle(dVX, dVY)
+                        leng2=math.sqrt((dX)**2+(dY)**2)
+                        leng=(A*self.x+B*self.y+C)/max(math.sqrt(A**2+B**2), 0.000000000001)
+                        tmpdx=-math.sin(alpha2)*leng
+                        tmpdy=math.cos(alpha2)*leng
+                        if leng<150*self.extraSize and leng2<1000*self.extraSize:
+                            dD=1/max(abs(leng), 0.000000000001, key=abs)
+#                            dx+=(dX/abs(dX))*dD*math.cos(alpha)
+#                            dy+=(dY/abs(dY))*dD*math.sin(alpha)
+                            dx+=dD*tmpdx
+                            dy+=dD*tmpdy
+                if dx==0 and dy==0:
+                    dx=targetPoint[0]-target.vx*1000/FrameTime-self.x
+                    dy=targetPoint[1]-target.vy*1000/FrameTime-self.y
+            else:
+                dx=targetPoint[0]-target.vx*1000/FrameTime-self.x
+                dy=targetPoint[1]-target.vy*1000/FrameTime-self.y
+        if dx+dx2<0:
+            targetAngle=math.atan((-dy-dy2)/(max(dx+dx2, 0.000000000001, key=abs)))+math.pi
+        else:
+            targetAngle=math.atan((-dy-dy2)/(max(dx+dx2, 0.000000000001, key=abs)))
+        dAngle = targetAngle-self.angle
+        if dAngle>2*math.pi:
+            dAngle-=2*math.pi
+        if abs(dAngle)>math.pi:
+            if dAngle>0:
+                dAngle=-2*math.pi+dAngle
+            else:
+                dAngle=2*math.pi-dAngle
+        # поворот
+        if dAngle>0:
+            da = min((0.5+self.control/2)/5/math.sqrt(1+math.sqrt(((self.vx)**2+(self.vy)**2))), abs(dAngle))
+            self.angle += da
+            tmpvx = self.vx
+            tmpvy = self.vy
+            self.vx = math.cos(da*(0.5+self.control/2))*tmpvx + math.sin(da*(0.5+self.control/2))*tmpvy
+            self.vy = -math.sin(da*(0.5+self.control/2))*tmpvx + math.cos(da*(0.5+self.control/2))*tmpvy
+        else:
+            da = min((0.5+self.control/2)/5/math.sqrt(1+math.sqrt(((self.vx)**2+(self.vy)**2))), abs(dAngle))
+            da*=-1
+            self.angle += da
+            tmpvx = self.vx
+            tmpvy = self.vy
+            self.vx = math.cos(da*(0.5+self.control/2))*tmpvx + math.sin(da*(0.5+self.control/2))*tmpvy
+            self.vy = -math.sin(da*(0.5+self.control/2))*tmpvx + math.cos(da*(0.5+self.control/2))*tmpvy
+        # движение 
+        self.force+=self.engineForceAcseleration
+        if self.force > self.maxForce:
+            self.force = self.maxForce
+        # переключение стрельбы
+        if self.botMode==0:
+            for i in self.guns:
+                if abs(dAngle)<(target.collisionR*target.extraSize/l):
+                    if target.notCrashed:
+                        if l/self.guns[0].bulletSpeedX/self.extraSize<2000/FrameTime:
+                            i.shoot()
+            if self.energy<10:
+                self.botMode=1
+        if self.botMode==1:
+            if self.energy>0.95*self.maxEnergy:
+                self.botMode=0
+            if self.energy>max(2*(target.hp*1+target.shield*1)/(self.guns[0].bulletDamage*self.guns[0].bulletCount)*self.guns[0].energyConsumption, len(self.guns)*self.guns[0].energyConsumption):
+                self.botMode=0
+        
 
 if __name__=='__main__':
     root = tkinter.Tk()
@@ -328,6 +561,8 @@ if __name__=='__main__':
     def draw():
         global x, y, r, FrameTime, reset
         canv.delete(tkinter.ALL)
+        Starship002.botMachineGun2(Starship001)
+        #Starship001.botMachineGun1(Starship002)
         if  Starship001.notCrashed:
             if Starship001.checkHit(Starship002):
                 Starship002.crash()
