@@ -44,8 +44,11 @@ class ball():
    else:
     self.live-=1
   if self.x>780:
-   self.vx=-self.vx/2
+   self.vx=-abs(self.vx/2)
    self.x=779
+  if self.x<20:
+   self.vx=abs(self.vx/2)
+   self.x=21
  def hittest(self,ob):
   if ((abs(ob.x-self.x)**2+abs(ob.y-self.y)**2<=(self.r+ob.r)**2) and (not self.idC==ob.idC)):
    return True

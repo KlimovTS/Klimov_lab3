@@ -7,7 +7,7 @@ def KeyboardKeys():
     for i in range(97, 123):
         keys.append(chr(i))
 #    anotherKeys = ['-', '=', '[', ']', ';', '\'', '\\', ',', '.', '/', 'space']
-    anotherKeys = ['space']
+    anotherKeys = ['space', 'Up', 'Down', 'Right', 'Left']
     for i in anotherKeys:
         keys.append(i)
     return keys
