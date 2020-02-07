@@ -94,7 +94,7 @@ def draw():
         if a:
             tmpEForceParticles.append(i)
         i.move()
-        #i.draw()
+#        i.draw()
     eForceParticles = tmpEForceParticles
     for i in Particles:
         i.illuminate()
@@ -104,6 +104,7 @@ def draw():
     root.after(16, draw)
 
 Particles.append(Particle(300, 300-26*0.1, 1000, 1, 0, 0.1))
+#Particles.append(Particle(10, 300-26*0.1, 1000, 1, 25, 0))
 Particles.append(Particle(500, 300+26*0.1, 1000, -1, 0, -0.1))
 Perfect.append(Particle(200, 274, 1000, 1, 0, 1))
 Perfect.append(Particle(600, 326, 1000, -1, 0, -1))
